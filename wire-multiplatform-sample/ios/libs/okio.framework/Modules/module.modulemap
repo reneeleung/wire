@@ -1,0 +1,6 @@
+framework module okio {
+    umbrella header "okio.h"
+
+    export *
+    module * { export * }
+}

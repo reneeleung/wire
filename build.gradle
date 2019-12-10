@@ -24,7 +24,8 @@ buildscript {
       'mavenAnnotations': '3.5',
       'mavenPluginBuilder': '1.2.4',
       'mavenPublish': '0.8.0',
-      'releasedWire': '3.0.0-alpha01'
+      'releasedWire': '3.0.2',
+      'agp': '3.5.2',
   ]
 
   ext.deps = [
@@ -33,6 +34,7 @@ buildscript {
           shadow: 'com.github.jengelman.gradle.plugins:shadow:4.0.1',
           releasedWire: "com.squareup.wire:wire-gradle-plugin:${versions.releasedWire}",
           japicmp: 'me.champeau.gradle:japicmp-gradle-plugin:0.2.8',
+          'agp': "com.android.tools.build:gradle:${versions.agp}",
       ],
       'android': "com.google.android:android:${versions.android}",
       'androidx': [
@@ -103,11 +105,13 @@ buildscript {
     classpath deps.animalSniffer.gradle
     classpath deps.maven.plugin.builder
     classpath deps.maven.plugin.publish
+    classpath deps.plugins.agp
   }
 
   repositories {
     mavenCentral()
     gradlePluginPortal()
+    google()
   }
 }
 
@@ -122,6 +126,8 @@ allprojects {
 }
 
 subprojects { project ->
+  if (project.name == 'wire-multiplatform-sample') return
+
   // The `application` plugin internally applies the `distribution` plugin and
   // automatically adds tasks to create/publish tar and zip artifacts.
   // https://docs.gradle.org/current/userguide/application_plugin.html
@@ -142,6 +148,8 @@ subprojects { project ->
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
   }
+
+  if (project.name == 'android' || project.name == 'protos') return
 
   if (project.name != 'wire-runtime' && project.name != 'japicmp' && project.name != 'wire-tests') {
     apply plugin: 'com.vanniktech.maven.publish'
