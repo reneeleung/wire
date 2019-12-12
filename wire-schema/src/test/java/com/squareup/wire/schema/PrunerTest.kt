@@ -1276,7 +1276,8 @@ class PrunerTest {
     assertThat(authorType.constant("ZEUS")!!.options.fields().isEmpty()).isTrue()
     assertThat(authorType.constant("ARTEMIS")!!.options.fields().isEmpty()).isTrue()
     assertThat(authorType.constant("APOLLO")!!.options.fields().isEmpty()).isTrue()
-    assertThat(authorType.constant("POSEIDON")!!.options.fields().isEmpty()).isTrue()
+    // Options defined in google.protobuf.descriptor.proto are not pruned.
+    assertThat(authorType.constant("POSEIDON")!!.options.fields().values()).hasSize(1)
   }
 
   @Test
@@ -1325,7 +1326,8 @@ class PrunerTest {
     val letterType = pruned.getType("squareup.Letter") as MessageType
     assertThat(letterType.field("header")!!.options.fields().isEmpty()).isTrue()
 
-    assertThat(letterType.field("add_margin")!!.options.fields().isEmpty()).isTrue()
+    // Options defined in google.protobuf.descriptor.proto are not pruned.
+    assertThat(letterType.field("add_margin")!!.options.fields().values()).hasSize(1)
     assertThat(letterType.field("add_margin")!!.isDeprecated).isTrue()
 
     assertThat(letterType.field("author")!!.options.fields().isEmpty()).isTrue()

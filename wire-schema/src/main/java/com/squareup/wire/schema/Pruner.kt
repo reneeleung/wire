@@ -16,6 +16,7 @@
 package com.squareup.wire.schema
 
 import com.squareup.wire.schema.ProtoMember.Companion.get
+import com.squareup.wire.schema.internal.isExtensionField
 import java.util.ArrayDeque
 import java.util.Deque
 
@@ -236,15 +237,10 @@ internal class Pruner(
   private fun addOptions(options: Collection<ProtoMember>, result: MutableList<Any?>) {
     for (member in options) {
       // If it's an extension, don't consider the entire enclosing type to be reachable.
-      if (!isExtensionField(member)) {
+      if (!member.isExtensionField(schema)) {
         result.add(member.type)
       }
       result.add(member)
     }
-  }
-
-  private fun isExtensionField(protoMember: ProtoMember): Boolean {
-    val type = schema.getType(protoMember.type)
-    return type is MessageType && type.extensionField(protoMember.member) != null
   }
 }

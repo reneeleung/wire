@@ -15,6 +15,16 @@
  */
 package com.squareup.wire.schema.internal
 
+import com.squareup.wire.schema.MessageType
+import com.squareup.wire.schema.Options.Companion.ENUM_OPTIONS
+import com.squareup.wire.schema.Options.Companion.ENUM_VALUE_OPTIONS
+import com.squareup.wire.schema.Options.Companion.FIELD_OPTIONS
+import com.squareup.wire.schema.Options.Companion.FILE_OPTIONS
+import com.squareup.wire.schema.Options.Companion.MESSAGE_OPTIONS
+import com.squareup.wire.schema.Options.Companion.METHOD_OPTIONS
+import com.squareup.wire.schema.Options.Companion.SERVICE_OPTIONS
+import com.squareup.wire.schema.ProtoMember
+import com.squareup.wire.schema.Schema
 import com.squareup.wire.schema.internal.parser.OptionElement
 
 object Util {
@@ -78,7 +88,16 @@ object Util {
 
   /** True if the supplied value is in the valid tag range and not reserved.  */
   fun isValidTag(value: Int) =
-    value in MIN_TAG_VALUE until RESERVED_TAG_VALUE_START ||
-        value in (RESERVED_TAG_VALUE_END + 1) until MAX_TAG_VALUE + 1
+      value in MIN_TAG_VALUE until RESERVED_TAG_VALUE_START ||
+          value in (RESERVED_TAG_VALUE_END + 1) until MAX_TAG_VALUE + 1
+}
 
+internal fun ProtoMember.isExtensionField(schema: Schema): Boolean {
+  val type = schema.getType(this.type)
+  return type is MessageType && type.extensionField(this.member) != null
+}
+
+internal fun ProtoMember.isGoogleProtobufType(): Boolean {
+  return arrayOf(FILE_OPTIONS, MESSAGE_OPTIONS, FIELD_OPTIONS, ENUM_OPTIONS, ENUM_VALUE_OPTIONS,
+      SERVICE_OPTIONS, METHOD_OPTIONS).contains(type)
 }

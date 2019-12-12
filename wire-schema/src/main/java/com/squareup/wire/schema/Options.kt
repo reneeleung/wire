@@ -18,6 +18,8 @@ package com.squareup.wire.schema
 import com.google.common.collect.LinkedHashMultimap
 import com.google.common.collect.Multimap
 import com.squareup.wire.schema.ProtoMember.Companion.get
+import com.squareup.wire.schema.internal.isExtensionField
+import com.squareup.wire.schema.internal.isGoogleProtobufType
 import com.squareup.wire.schema.internal.parser.OptionElement
 import java.util.LinkedHashMap
 import java.util.regex.Pattern
@@ -193,7 +195,7 @@ class Options(
   /** Combine values for the same key, resolving conflicts based on their type.  */
   private fun union(linker: Linker, a: Any, b: Any): Any {
     return when (a) {
-      is List<*> ->         a + b as List<*>
+      is List<*> -> a + b as List<*>
 
       is Map<*, *> -> {
         @Suppress("UNCHECKED_CAST") // All maps have this type.
@@ -308,17 +310,22 @@ class Options(
     o: Any
   ): Any? {
     return when {
-      !markSet.contains(type!!) -> null // Prune this type.
-
       o is Map<*, *> -> {
         val map = mutableMapOf<ProtoMember, Any>()
         for ((key, value) in o) {
           val protoMember = key as ProtoMember
-          if (!markSet.contains(protoMember)) continue  // Prune this field.
+          val isCoreMemberOfGoogleProtobuf =
+              protoMember.isGoogleProtobufType() && !protoMember.isExtensionField(schema)
+          if (!markSet.contains(protoMember) && !isCoreMemberOfGoogleProtobuf) {
+            continue  // Prune this field.
+          }
+
           val field = schema.getField(protoMember)
           val retainedValue = retainAll(schema, markSet, field.type, value!!)
           if (retainedValue != null) {
             map[protoMember] = retainedValue // This retained field is non-empty.
+          } else if (isCoreMemberOfGoogleProtobuf) {
+            map[protoMember] = value
           }
         }
         if (map.isNotEmpty()) map else null
@@ -334,6 +341,8 @@ class Options(
         }
         if (list.isNotEmpty()) list else null
       }
+
+      !markSet.contains(type!!) -> null // Prune this type.
 
       else -> o
     }
